@@ -1,3 +1,5 @@
+
+
 /*
     Copyright 2020, Mitch Curtis
 
@@ -16,7 +18,6 @@
     You should have received a copy of the GNU General Public License
     along with Slate. If not, see <http://www.gnu.org/licenses/>.
 */
-
 import QtQuick 2.13
 import QtQuick.Layouts 1.13
 import QtQuick.Window 2.13
@@ -26,6 +27,7 @@ import Qt.labs.settings 1.0
 import Qt.labs.platform 1.0 as Platform
 
 import App 1.0
+import UndoModel_A 1.0
 
 import "ui" as Ui
 
@@ -34,18 +36,20 @@ ApplicationWindow {
     objectName: "window"
     width: 1200
     height: 800
-    title: project && project.loaded
-        ? ((project.url.toString().length > 0 ? project.displayUrl : "Untitled") + (project.unsavedChanges ? "*" : ""))
-        : ""
+    title: project
+           && project.loaded ? ((project.url.toString(
+                                     ).length > 0 ? project.displayUrl : "Untitled")
+                                + (project.unsavedChanges ? "*" : "")) : ""
     opacity: settings.windowOpacity
     visible: true
 
-//    onActiveFocusItemChanged: print("active focus: " + activeFocusItem + ", parent: "
-//        + (activeFocusItem ? activeFocusItem.parent : null))
-
+    //    onActiveFocusItemChanged: print("active focus: " + activeFocusItem + ", parent: "
+    //        + (activeFocusItem ? activeFocusItem.parent : null))
     property Project project: projectManager.project
-    readonly property int projectType: project && projectManager.ready ? project.type : 0
-    readonly property bool isImageProjectType: projectType === Project.ImageType || projectType === Project.LayeredImageType
+    readonly property int projectType: project
+                                       && projectManager.ready ? project.type : 0
+    readonly property bool isImageProjectType: projectType === Project.ImageType
+                                               || projectType === Project.LayeredImageType
     readonly property bool isLayeredImageProjectType: projectType === Project.LayeredImageType
     property ImageCanvas canvas: canvasContainer.canvas
     property alias newProjectPopup: newProjectPopup
@@ -57,7 +61,9 @@ ApplicationWindow {
 
     onClosing: {
         close.accepted = false
-        saveChangesDialog.doIfChangesSavedOrDiscarded(function() { Qt.quit() })
+        saveChangesDialog.doIfChangesSavedOrDiscarded(function () {
+            Qt.quit()
+        })
     }
 
     // If we set the image URL immediately, it can happen before
@@ -73,21 +79,31 @@ ApplicationWindow {
         }
     }
 
+    function modelUpdate() {
+
+        //--------------------------------
+        var newModel = UndoModel_exec
+        {
+
+        }
+
+        undoStackList.model = newModel
+    }
+
     function saveOrSaveAs() {
         if (project.url.toString().length > 0) {
             // Existing project; can save without a dialog.
-            project.save();
+            project.save()
         } else {
             // New project; need to save as.
-            saveAsDialog.open();
+            saveAsDialog.open()
         }
     }
 
     function toggleFullScreen() {
         if (window.visibility === Window.FullScreen) {
             window.visibility = oldWindowVisibility
-        }
-        else {
+        } else {
             oldWindowVisibility = window.visibility
             window.visibility = Window.FullScreen
         }
@@ -103,17 +119,23 @@ ApplicationWindow {
 
     Connections {
         target: projectManager
-        function onCreationFailed(errorMessage) { errorPopup.showError(errorMessage) }
+        function onCreationFailed(errorMessage) {
+            errorPopup.showError(errorMessage)
+        }
     }
 
     Connections {
         target: projectManager.project ? projectManager.project : null
-        function onErrorOccurred(errorMessage) { errorPopup.showError(errorMessage) }
+        function onErrorOccurred(errorMessage) {
+            errorPopup.showError(errorMessage)
+        }
     }
 
     Connections {
         target: canvas
-        function onErrorOccurred(errorMessage) { errorPopup.showError(errorMessage) }
+        function onErrorOccurred(errorMessage) {
+            errorPopup.showError(errorMessage)
+        }
         function onNoteCreationRequested() {
             noteDialog.currentAction = Ui.NoteDialog.NoteAction.Create
             noteDialog.newNoteX = canvas.cursorSceneX
@@ -138,9 +160,11 @@ ApplicationWindow {
             if (project && project.uiState.contains("mainSplitViewState")) {
                 // Restore project state.
                 mainSplitView.restoreState(project.uiState.base64ToBinary(
-                    project.uiState.value("mainSplitViewState")))
+                                               project.uiState.value(
+                                                   "mainSplitViewState")))
                 panelSplitView.restoreState(project.uiState.base64ToBinary(
-                    project.uiState.value("panelSplitViewState")))
+                                                project.uiState.value(
+                                                    "panelSplitViewState")))
             } else {
                 // We should still restore the default sizes for all other cases, though.
                 // We only need to restore panelSplitView's preferredWidth, as mainSplitView fills.
@@ -150,9 +174,11 @@ ApplicationWindow {
         onReadyToSave: {
             // Save project state.
             project.uiState.setValue("mainSplitViewState",
-                project.uiState.binaryToBase64(mainSplitView.saveState()))
+                                     project.uiState.binaryToBase64(
+                                         mainSplitView.saveState()))
             project.uiState.setValue("panelSplitViewState",
-                project.uiState.binaryToBase64(panelSplitView.saveState()))
+                                     project.uiState.binaryToBase64(
+                                         panelSplitView.saveState()))
         }
     }
 
@@ -241,9 +267,48 @@ ApplicationWindow {
                 SplitView.maximumHeight: expanded ? Infinity : header.implicitHeight
             }
 
+            Ui.SwatchPanel {
+                //---------------------------------------------------------
+                id: swatchesPanel2
+                canvas: window.canvas
+                title: "History"
+                project: window.project
+
+                SplitView.minimumHeight: expanded ? minimumUsefulHeight : undefined
+                SplitView.preferredHeight: minimumUsefulHeight + 100
+                SplitView.maximumHeight: expanded ? Infinity : header.implicitHeight
+
+                ListView {
+                    id: undoStackList
+                    implicitHeight: 160
+                    //implicitHeight: implicitHeight.swatchesPanel2
+                    implicitWidth: 200
+
+                    clip: true
+                    model: project.modelUndo
+
+                    delegate: ColumnLayout {
+
+                        Text {
+                            id: name
+                            text: undoModelData
+                            color: "yellow"
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    qmlModelUndo.loadModelUndo()
+
+                                    console.log("model undo ")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Loader {
                 objectName: "tilesetSwatchLoader"
-                active: window.projectType === Project.TilesetType && window.canvas
+                active: window.projectType === Project.TilesetType
+                        && window.canvas
                 visible: active
                 sourceComponent: Ui.TilesetSwatchPanel {
                     id: tilesetSwatch
@@ -253,7 +318,8 @@ ApplicationWindow {
                     z: canvasContainer.z - 1
                 }
 
-                SplitView.minimumHeight: active && item.expanded ? item.header.implicitHeight : undefined
+                SplitView.minimumHeight: active
+                                         && item.expanded ? item.header.implicitHeight : undefined
                 SplitView.maximumHeight: active ? (item.expanded ? Infinity : item.header.implicitHeight) : 0
                 SplitView.fillHeight: active && item.expanded
             }
@@ -268,14 +334,16 @@ ApplicationWindow {
                     z: canvasContainer.z - 1
                 }
 
-                SplitView.minimumHeight: active && item.expanded ? item.minimumUsefulHeight : undefined
+                SplitView.minimumHeight: active
+                                         && item.expanded ? item.minimumUsefulHeight : undefined
                 SplitView.maximumHeight: active ? (item.expanded ? Infinity : item.header.implicitHeight) : 0
                 SplitView.fillHeight: active && item.expanded
             }
 
             Ui.AnimationPanel {
                 id: animationPanel
-                visible: window.project && window.project.loaded && isImageProjectType && window.project.usingAnimation
+                visible: window.project && window.project.loaded
+                         && isImageProjectType && window.project.usingAnimation
                 project: visible ? window.project : null
                 canvas: window.canvas
 
@@ -291,9 +359,7 @@ ApplicationWindow {
     readonly property var tilesetFilters: ["STP files (*.stp)"]
 
     function nameFiltersForProjectType(projectType) {
-        return projectType === Project.ImageType ? imageFilters
-            : projectType === Project.LayeredImageType ? layeredImageFilters
-            : tilesetFilters;
+        return projectType === Project.ImageType ? imageFilters : projectType === Project.LayeredImageType ? layeredImageFilters : tilesetFilters
     }
 
     Platform.FileDialog {
@@ -340,28 +406,37 @@ ApplicationWindow {
     }
 
     function createNewProject(type) {
-        projectManager.beginCreation(type);
+        projectManager.beginCreation(type)
 
         if (type === Project.TilesetType) {
-            var p = newTilesetProjectPopup;
-            projectManager.temporaryProject.createNew(p.tilesetPath, p.tileWidth, p.tileHeight,
-                p.tilesetTilesWide, p.tilesetTilesHigh, p.canvasTilesWide, p.canvasTilesHigh,
-                p.transparentBackground);
+            var p = newTilesetProjectPopup
+            projectManager.temporaryProject.createNew(p.tilesetPath,
+                                                      p.tileWidth,
+                                                      p.tileHeight,
+                                                      p.tilesetTilesWide,
+                                                      p.tilesetTilesHigh,
+                                                      p.canvasTilesWide,
+                                                      p.canvasTilesHigh,
+                                                      p.transparentBackground)
         } else if (type === Project.ImageType) {
-            var p = newImageProjectPopup;
-            projectManager.temporaryProject.createNew(p.imageWidth, p.imageHeight, p.transparentBackground);
+            var p = newImageProjectPopup
+            projectManager.temporaryProject.createNew(p.imageWidth,
+                                                      p.imageHeight,
+                                                      p.transparentBackground)
         } else if (type === Project.LayeredImageType) {
-            var p = newLayeredImageProjectPopup;
-            projectManager.temporaryProject.createNew(p.imageWidth, p.imageHeight, p.transparentBackground);
+            var p = newLayeredImageProjectPopup
+            projectManager.temporaryProject.createNew(p.imageWidth,
+                                                      p.imageHeight,
+                                                      p.transparentBackground)
         }
 
-        projectManager.completeCreation();
+        projectManager.completeCreation()
     }
 
     function loadProject(url) {
-        projectManager.beginCreation(projectManager.projectTypeForUrl(url));
-        projectManager.temporaryProject.load(url);
-        projectManager.completeCreation();
+        projectManager.beginCreation(projectManager.projectTypeForUrl(url))
+        projectManager.temporaryProject.load(url)
+        projectManager.completeCreation()
     }
 
     Ui.NewTilesetProjectPopup {
@@ -493,4 +568,3 @@ ApplicationWindow {
         anchors.centerIn: parent
     }
 }
-

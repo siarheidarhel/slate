@@ -1,3 +1,5 @@
+
+
 /*
     Copyright 2020, Mitch Curtis
 
@@ -16,7 +18,6 @@
     You should have received a copy of the GNU General Public License
     along with Slate. If not, see <http://www.gnu.org/licenses/>.
 */
-
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Templates 2.12 as T
@@ -39,7 +40,8 @@ ToolBar {
 
     readonly property int projectType: project ? project.type : 0
     readonly property bool isTilesetProject: projectType === Project.TilesetType
-    readonly property bool isImageProject: projectType === Project.ImageType || projectType === Project.LayeredImageType
+    readonly property bool isImageProject: projectType === Project.ImageType
+                                           || projectType === Project.LayeredImageType
     readonly property bool projectLoaded: canvas && project && project.loaded
 
     Connections {
@@ -123,7 +125,8 @@ ToolBar {
             Ui.IconToolButton {
                 objectName: "undoToolButton"
                 text: "\uf0e2"
-                enabled: projectLoaded && (project.undoStack.canUndo || canvas.hasModifiedSelection)
+                enabled: projectLoaded && (project.undoStack.canUndo
+                                           || canvas.hasModifiedSelection)
 
                 ToolTip.text: qsTr("Undo the last canvas operation")
 
@@ -179,7 +182,8 @@ ToolBar {
                 checked: true
                 enabled: projectLoaded
 
-                ToolTip.text: qsTr("Draw pixels%1 on the canvas").arg(isTilesetProject ? qsTr(" or tiles") : "")
+                ToolTip.text: qsTr("Draw pixels%1 on the canvas").arg(
+                                  isTilesetProject ? qsTr(" or tiles") : "")
 
                 onClicked: canvas.tool = ImageCanvas.PenTool
             }
@@ -191,7 +195,8 @@ ToolBar {
                 checkable: true
                 enabled: projectLoaded
 
-                ToolTip.text: qsTr("Pick colours%1 from the canvas").arg(isTilesetProject ? qsTr(" or tiles") : "")
+                ToolTip.text: qsTr("Pick colours%1 from the canvas").arg(
+                                  isTilesetProject ? qsTr(" or tiles") : "")
 
                 onClicked: canvas.tool = ImageCanvas.EyeDropperTool
             }
@@ -203,7 +208,8 @@ ToolBar {
                 checkable: true
                 enabled: projectLoaded
 
-                ToolTip.text: qsTr("Erase pixels%1 from the canvas").arg(isTilesetProject ? qsTr(" or tiles") : "")
+                ToolTip.text: qsTr("Erase pixels%1 from the canvas").arg(
+                                  isTilesetProject ? qsTr(" or tiles") : "")
 
                 onClicked: canvas.tool = ImageCanvas.EraserTool
             }
@@ -214,10 +220,10 @@ ToolBar {
                 checkable: true
                 enabled: projectLoaded
 
-                readonly property bool regularFill: canvas && canvas.lastFillToolUsed === ImageCanvas.FillTool
-                readonly property string imageProjectToolTipText:
-                    qsTr("Fill a contiguous area with %1pixels.\nHold Shift to fill all pixels matching the target colour.")
-                        .arg(!regularFill ? "semi-randomised " : "")
+                readonly property bool regularFill: canvas
+                                                    && canvas.lastFillToolUsed
+                                                    === ImageCanvas.FillTool
+                readonly property string imageProjectToolTipText: qsTr("Fill a contiguous area with %1pixels.\nHold Shift to fill all pixels matching the target colour.").arg(!regularFill ? "semi-randomised " : "")
 
                 icon.source: regularFill ? "qrc:/images/fill.png" : "qrc:/images/textured-fill.png"
 
@@ -225,9 +231,10 @@ ToolBar {
                 ToolTip.visible: hovered && !fillMenu.visible
 
                 onClicked: canvas.tool = canvas.lastFillToolUsed
-                onPressAndHold: if (!isTilesetProject) fillMenu.open()
-                // TODO: respond to right clicks when https://bugreports.qt.io/browse/QTBUG-67331 is implemented
+                onPressAndHold: if (!isTilesetProject)
+                                    fillMenu.open()
 
+                // TODO: respond to right clicks when https://bugreports.qt.io/browse/QTBUG-67331 is implemented
                 ToolButtonMenuIndicator {
                     color: fillToolButton.icon.color
                     anchors.right: parent.contentItem.right
@@ -296,7 +303,8 @@ ToolBar {
             objectName: "toolShapeButton"
             enabled: projectLoaded
 
-            readonly property bool squareShape: canvas && canvas.toolShape === ImageCanvas.SquareToolShape
+            readonly property bool squareShape: canvas
+                                                && canvas.toolShape === ImageCanvas.SquareToolShape
             icon.source: squareShape ? "qrc:/images/square-tool-shape.png" : "qrc:/images/circle-tool-shape.png"
 
             ToolTip.text: qsTr("Choose brush shape")
@@ -322,7 +330,8 @@ ToolBar {
                     icon.source: "qrc:/images/square-tool-shape.png"
                     autoExclusive: true
                     checkable: true
-                    checked: canvas && canvas.toolShape === ImageCanvas.SquareToolShape
+                    checked: canvas
+                             && canvas.toolShape === ImageCanvas.SquareToolShape
                     onTriggered: canvas.toolShape = ImageCanvas.SquareToolShape
                 }
                 MenuItem {
@@ -331,7 +340,8 @@ ToolBar {
                     icon.source: "qrc:/images/circle-tool-shape.png"
                     autoExclusive: true
                     checkable: true
-                    checked: canvas && canvas.toolShape === ImageCanvas.CircleToolShape
+                    checked: canvas
+                             && canvas.toolShape === ImageCanvas.CircleToolShape
                     onTriggered: canvas.toolShape = ImageCanvas.CircleToolShape
                 }
             }
@@ -346,7 +356,8 @@ ToolBar {
             id: transformLayout
             height: parent.height
             spacing: 5
-            visible: projectType === Project.ImageType || projectType === Project.LayeredImageType
+            visible: projectType === Project.ImageType
+                     || projectType === Project.LayeredImageType
             enabled: projectLoaded
 
             Ui.ToolButton {
