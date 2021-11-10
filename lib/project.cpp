@@ -765,10 +765,6 @@ void Project::addChange(UndoCommand *undoCommand)
 
     mUndoStack.push(undoCommand);
 
-    for (int i = 0; i < mUndoStack.count(); i++) {
-
-      UndoModel::m_stringContainer << mUndoStack.command(i)->text();
-    }
     emit undoModelChanged();
 
     if (modifiedContents)
@@ -780,9 +776,10 @@ void Project::clearChanges()
     const bool hadUnsavedChanges = hasUnsavedChanges();
 
     mUndoStack.setIndex(mUndoStack.cleanIndex());
+
     mHadUnsavedChangesBeforeMacroBegan = false;
 
     if (hasUnsavedChanges() != hadUnsavedChanges) {
-        emit unsavedChangesChanged();
+      emit unsavedChangesChanged();
     }
 }

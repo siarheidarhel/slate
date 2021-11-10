@@ -130,7 +130,10 @@ ToolBar {
 
                 ToolTip.text: qsTr("Undo the last canvas operation")
 
-                onClicked: canvas.undo()
+                onClicked: {
+
+                    canvas.undo()
+                }
             }
 
             Ui.IconToolButton {
@@ -140,7 +143,9 @@ ToolBar {
 
                 ToolTip.text: qsTr("Redo the last undone canvas operation")
 
-                onClicked: project.undoStack.redo()
+                onClicked: {
+                    project.undoStack.redo()
+                }
             }
 
             ToolSeparator {}

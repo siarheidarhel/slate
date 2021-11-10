@@ -79,17 +79,6 @@ ApplicationWindow {
         }
     }
 
-    function modelUpdate() {
-
-        //--------------------------------
-        var newModel = UndoModel_exec
-        {
-
-        }
-
-        undoStackList.model = newModel
-    }
-
     function saveOrSaveAs() {
         if (project.url.toString().length > 0) {
             // Existing project; can save without a dialog.
@@ -267,7 +256,7 @@ ApplicationWindow {
                 SplitView.maximumHeight: expanded ? Infinity : header.implicitHeight
             }
 
-            Ui.SwatchPanel {
+            Ui.SwatchPanel_copy {
                 //---------------------------------------------------------
                 id: swatchesPanel2
                 canvas: window.canvas
@@ -280,26 +269,41 @@ ApplicationWindow {
 
                 ListView {
                     id: undoStackList
-                    implicitHeight: 160
-                    //implicitHeight: implicitHeight.swatchesPanel2
-                    implicitWidth: 200
-
-                    clip: true
                     model: project.modelUndo
+                    implicitHeight: panelSplitView.availableHeight //140
+                    implicitWidth: panelSplitView.availableWidth
+                    Layout.fillHeight: true
+                    focus: true
+                    clip: true
+
+                    highlight: Rectangle {
+                        color: "#33f7d1d1"
+                        height: 18
+                        width: swatchesPanel2.width
+                    }
 
                     delegate: ColumnLayout {
+                        id: columnUndo
+                        implicitHeight: swatchesPanel2.implicitContentHeight
+                        Rectangle {
+                            id: modelTextRect
+                            width: swatchesPanel2.width
+                            height: 18
+                            color: "#1ae3e3e3"
+                            z: -1
 
-                        Text {
-                            id: name
-                            text: undoModelData
-                            color: "yellow"
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    qmlModelUndo.loadModelUndo()
-
-                                    console.log("model undo ")
+                                    undoStackList.currentIndex = index
+                                    canvas.undo()
                                 }
+                            }
+
+                            Text {
+                                id: textInModel
+                                text: undoModelData
+                                color: "white"
                             }
                         }
                     }

@@ -3,14 +3,8 @@
 #include <QList>
 
 UndoModel::UndoModel(QUndoStack *undoStack, QObject *parent)
-    : QAbstractItemModel(parent), m_undoStack(undoStack) {
+    : QAbstractItemModel(parent), m_undoStack(undoStack) {}
 
-  // connect(this, SIGNAL(modelListChanged()), this, SLOT(loadModelUndo()));
-
-  UndoModel::m_stringContainer << "Empty";
-}
-
-QList<QString> UndoModel::m_stringContainer;
 UndoModel::~UndoModel() = default;
 
 QModelIndex UndoModel::index(int row, int column,
@@ -67,7 +61,6 @@ QHash<int, QByteArray> UndoModel::roleNames() const {
 bool UndoModel::loadModelUndo() {
   beginResetModel();
 
-  qDebug() << "loadUndoModel   :" << rowCount(QModelIndex());
   endResetModel();
   return true;
 }

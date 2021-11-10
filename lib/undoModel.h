@@ -33,7 +33,6 @@ signals:
 
 public:
   QPointer<QUndoStack> m_undoStack;
-  static QList<QString> m_stringContainer;
 };
 
 #endif // UNDOMODEL_H
