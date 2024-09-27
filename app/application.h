@@ -26,6 +26,7 @@
 
 #include "applicationsettings.h"
 #include "projectmanager.h"
+#include "undoModel.h"
 
 class Application
 {
@@ -39,7 +40,7 @@ public:
     QQmlApplicationEngine *qmlEngine() const;
     ProjectManager *projectManager();
 
-private:
+  private:
     void registerQmlTypes();
     void addFonts();
     void installTranslators();
@@ -47,6 +48,7 @@ private:
     QScopedPointer<QGuiApplication> mApplication;
     QScopedPointer<ApplicationSettings> mSettings;
     QScopedPointer<QQmlApplicationEngine> mEngine;
+
     ProjectManager mProjectManager;
 };
 

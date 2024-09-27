@@ -38,8 +38,8 @@
 #include "imageproject.h"
 #include "keysequenceeditor.h"
 #include "layeredimagecanvas.h"
-#include "layermodel.h"
 #include "layeredimageproject.h"
+#include "layermodel.h"
 #include "newprojectvalidator.h"
 #include "notesitem.h"
 #include "probabilityswatchmodel.h"
@@ -65,6 +65,7 @@
 #include "tileset.h"
 #include "tilesetproject.h"
 #include "tilesetswatchimage.h"
+#include "undoModel.h"
 
 Q_LOGGING_CATEGORY(lcApplication, "app.application")
 
@@ -90,18 +91,16 @@ static QObject *buildInfoSingletonProvider(QQmlEngine *, QJSEngine *)
     return new BuildInfo;
 }
 
-Application::Application(int &argc, char **argv, const QString &applicationName) :
-    mApplication(createApplication(argc, argv, applicationName)),
-    mSettings(new ApplicationSettings),
-    mEngine(new QQmlApplicationEngine)
-{
-    qCDebug(lcApplication) << "constructing Application...";
+Application::Application(int &argc, char **argv, const QString &applicationName)
+    : mApplication(createApplication(argc, argv, applicationName)),
+      mSettings(new ApplicationSettings), mEngine(new QQmlApplicationEngine) {
+  qCDebug(lcApplication) << "constructing Application...";
 
-    registerQmlTypes();
+  registerQmlTypes();
 
-    addFonts();
+  addFonts();
 
-    installTranslators();
+  installTranslators();
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
     QQmlFileSelector fileSelector(mEngine.data());
@@ -160,64 +159,84 @@ ProjectManager *Application::projectManager()
 }
 
 void Application::registerQmlTypes()
-{
-    qmlRegisterType<AnimationModel>("App", 1, 0, "AnimationModel");
-    qmlRegisterType<AnimationPlayback>("App", 1, 0, "AnimationPlayback");
-    qmlRegisterType<AutoSwatchModel>("App", 1, 0, "AutoSwatchModel");
-    qmlRegisterType<FileValidator>("App", 1, 0, "FileValidator");
-    qmlRegisterType<GuidesItem>("App", 1, 0, "GuidesItem");
-    qmlRegisterType<ImageCanvas>();
-    qmlRegisterType<ImageCanvas>("App", 1, 0, "ImageCanvas");
-    qmlRegisterType<CanvasPaneItem>("App", 1, 0, "CanvasPaneItem");
-    qmlRegisterType<TileCanvasPaneItem>("App", 1, 0, "TileCanvasPaneItem");
-    qmlRegisterType<KeySequenceEditor>("App", 1, 0, "KeySequenceEditor");
-    qmlRegisterType<LayeredImageCanvas>("App", 1, 0, "LayeredImageCanvas");
-    qmlRegisterType<LayerModel>("App", 1, 0, "LayerModel");
-    qmlRegisterType<NewProjectValidator>("App", 1, 0, "NewProjectValidator");
-    qmlRegisterType<NotesItem>("App", 1, 0, "NotesItem");
-    qmlRegisterType<ProbabilitySwatch>();
-    qmlRegisterType<ProbabilitySwatchModel>("App", 1, 0, "ProbabilitySwatchModel");
-    qmlRegisterType<ProjectManager>("App", 1, 0, "ProjectManager");
-    qmlRegisterType<RectangularCursor>("App", 1, 0, "RectangularCursor");
-    qmlRegisterType<Ruler>("App", 1, 0, "Ruler");
-    qmlRegisterType<SaturationLightnessPicker>("App", 1, 0, "SaturationLightnessPickerTemplate");
-    qmlRegisterType<SelectionCursorGuide>("App", 1, 0, "SelectionCursorGuide");
-    qmlRegisterType<SelectionItem>("App", 1, 0, "SelectionItem");
-    qmlRegisterType<SerialisableState>();
-    qmlRegisterType<SpriteImage>("App", 1, 0, "SpriteImage");
-    qmlRegisterType<Splitter>();
-    qmlRegisterType<Swatch>();
-    qmlRegisterType<SwatchModel>("App", 1, 0, "SwatchModel");
-    qmlRegisterType<TexturedFillPreviewItem>("App", 1, 0, "TexturedFillPreviewItem");
-    qmlRegisterType<TileCanvas>();
-    qmlRegisterType<TileCanvas>("App", 1, 0, "TileCanvas");
-    qmlRegisterType<TileGrid>("App", 1, 0, "TileGrid");
-    qmlRegisterType<TilesetSwatchImage>("App", 1, 0, "TilesetSwatchImage");
-    qmlRegisterUncreatableType<Animation>("App", 1, 0, "Animation", QLatin1String("Cannot create objects of type Animation"));
-    qmlRegisterUncreatableType<AnimationSystem>("App", 1, 0, "AnimationSystem", QLatin1String("Cannot create objects of type AnimationSystem"));
-    qmlRegisterUncreatableType<CanvasPane>("App", 1, 0, "CanvasPane", "Can't create instances of CanvasPane");
-    qmlRegisterUncreatableType<ClipboardImage>("App", 1, 0, "ClipboardImage",
-        QLatin1String("Cannot create objects of type ClipboardImage"));
-    qmlRegisterUncreatableType<Project>("App", 1, 0, "Project", QLatin1String("Cannot create objects of type Project"));
-    qmlRegisterUncreatableType<LayeredImageProject>("App", 1, 0, "LayeredImageProject",
-        QLatin1String("Cannot create objects of type LayeredImageProject"));
-    qmlRegisterUncreatableType<TexturedFillVarianceParameter>("App", 1, 0, "TexturedFillParameter",
-        QLatin1String("Cannot create objects of type TexturedFillParameter"));
-    qmlRegisterUncreatableType<TexturedFillParameters>("App", 1, 0, "TexturedFillParameters",
-        QLatin1String("Cannot create objects of type TexturedFillParameters"));
-    qmlRegisterSingletonType<BuildInfo>("App", 1, 0, "BuildInfo", buildInfoSingletonProvider);
-    qmlRegisterSingletonType<Clipboard>("App", 1, 0, "Clipboard", &Clipboard::qmlInstance);
-    qRegisterMetaType<ApplicationSettings*>();
-    qRegisterMetaType<ImageLayer*>();
-    qRegisterMetaType<Project::Type>();
 
-    // For some reason, only when debugging, I get
-    // QMetaProperty::read: Unable to handle unregistered datatype 'QUndoStack*' for property 'Project_QML_108::undoStack'
-    // if I don't do this.
-    qRegisterMetaType<QUndoStack*>();
-    qRegisterMetaType<Tile*>();
-    qRegisterMetaType<Tileset*>();
-    qRegisterMetaType<QVector<QColor>>();
+{
+
+  qmlRegisterType<UndoModel>("UndoModel_A", 1, 0, "UndoModel_exec"); //_________
+
+  qmlRegisterType<AnimationModel>("App", 1, 0, "AnimationModel");
+  qmlRegisterType<AnimationPlayback>("App", 1, 0, "AnimationPlayback");
+  qmlRegisterType<AutoSwatchModel>("App", 1, 0, "AutoSwatchModel");
+  qmlRegisterType<FileValidator>("App", 1, 0, "FileValidator");
+  qmlRegisterType<GuidesItem>("App", 1, 0, "GuidesItem");
+  qmlRegisterType<ImageCanvas>();
+  qmlRegisterType<ImageCanvas>("App", 1, 0, "ImageCanvas");
+  qmlRegisterType<CanvasPaneItem>("App", 1, 0, "CanvasPaneItem");
+  qmlRegisterType<TileCanvasPaneItem>("App", 1, 0, "TileCanvasPaneItem");
+  qmlRegisterType<KeySequenceEditor>("App", 1, 0, "KeySequenceEditor");
+  qmlRegisterType<LayeredImageCanvas>("App", 1, 0, "LayeredImageCanvas");
+  qmlRegisterType<LayerModel>("App", 1, 0, "LayerModel");
+  qmlRegisterType<NewProjectValidator>("App", 1, 0, "NewProjectValidator");
+  qmlRegisterType<NotesItem>("App", 1, 0, "NotesItem");
+  qmlRegisterType<ProbabilitySwatch>();
+  qmlRegisterType<ProbabilitySwatchModel>("App", 1, 0,
+                                          "ProbabilitySwatchModel");
+  qmlRegisterType<ProjectManager>("App", 1, 0, "ProjectManager");
+  qmlRegisterType<RectangularCursor>("App", 1, 0, "RectangularCursor");
+  qmlRegisterType<Ruler>("App", 1, 0, "Ruler");
+  qmlRegisterType<SaturationLightnessPicker>(
+      "App", 1, 0, "SaturationLightnessPickerTemplate");
+  qmlRegisterType<SelectionCursorGuide>("App", 1, 0, "SelectionCursorGuide");
+  qmlRegisterType<SelectionItem>("App", 1, 0, "SelectionItem");
+  qmlRegisterType<SerialisableState>();
+  qmlRegisterType<SpriteImage>("App", 1, 0, "SpriteImage");
+  qmlRegisterType<Splitter>();
+  qmlRegisterType<Swatch>();
+  qmlRegisterType<SwatchModel>("App", 1, 0, "SwatchModel");
+  qmlRegisterType<TexturedFillPreviewItem>("App", 1, 0,
+                                           "TexturedFillPreviewItem");
+  qmlRegisterType<TileCanvas>();
+  qmlRegisterType<TileCanvas>("App", 1, 0, "TileCanvas");
+  qmlRegisterType<TileGrid>("App", 1, 0, "TileGrid");
+  qmlRegisterType<TilesetSwatchImage>("App", 1, 0, "TilesetSwatchImage");
+  qmlRegisterUncreatableType<Animation>(
+      "App", 1, 0, "Animation",
+      QLatin1String("Cannot create objects of type Animation"));
+  qmlRegisterUncreatableType<AnimationSystem>(
+      "App", 1, 0, "AnimationSystem",
+      QLatin1String("Cannot create objects of type AnimationSystem"));
+  qmlRegisterUncreatableType<CanvasPane>(
+      "App", 1, 0, "CanvasPane", "Can't create instances of CanvasPane");
+  qmlRegisterUncreatableType<ClipboardImage>(
+      "App", 1, 0, "ClipboardImage",
+      QLatin1String("Cannot create objects of type ClipboardImage"));
+  qmlRegisterUncreatableType<Project>(
+      "App", 1, 0, "Project",
+      QLatin1String("Cannot create objects of type Project"));
+  qmlRegisterUncreatableType<LayeredImageProject>(
+      "App", 1, 0, "LayeredImageProject",
+      QLatin1String("Cannot create objects of type LayeredImageProject"));
+  qmlRegisterUncreatableType<TexturedFillVarianceParameter>(
+      "App", 1, 0, "TexturedFillParameter",
+      QLatin1String("Cannot create objects of type TexturedFillParameter"));
+  qmlRegisterUncreatableType<TexturedFillParameters>(
+      "App", 1, 0, "TexturedFillParameters",
+      QLatin1String("Cannot create objects of type TexturedFillParameters"));
+  qmlRegisterSingletonType<BuildInfo>("App", 1, 0, "BuildInfo",
+                                      buildInfoSingletonProvider);
+  qmlRegisterSingletonType<Clipboard>("App", 1, 0, "Clipboard",
+                                      &Clipboard::qmlInstance);
+  qRegisterMetaType<ApplicationSettings *>();
+  qRegisterMetaType<ImageLayer *>();
+  qRegisterMetaType<Project::Type>();
+
+  // For some reason, only when debugging, I get
+  // QMetaProperty::read: Unable to handle unregistered datatype 'QUndoStack*'
+  // for property 'Project_QML_108::undoStack' if I don't do this.
+  qRegisterMetaType<QUndoStack *>();
+  qRegisterMetaType<Tile *>();
+  qRegisterMetaType<Tileset *>();
+  qRegisterMetaType<QVector<QColor>>();
 }
 
 void Application::addFonts()

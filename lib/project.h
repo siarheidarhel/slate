@@ -25,9 +25,11 @@
 #include <QLoggingCategory>
 #include <QObject>
 #include <QSize>
+#include <QStringListModel>
 #include <QTemporaryDir>
-#include <QVersionNumber>
+#include <QUndoView>
 #include <QUrl>
+#include <QVersionNumber>
 
 #include <QUndoStack>
 
@@ -36,13 +38,14 @@
 #include "serialisablestate.h"
 #include "slate-global.h"
 #include "swatch.h"
+#include "undoModel.h"
 #include "undocommand.h"
 
 Q_DECLARE_LOGGING_CATEGORY(lcProject)
 Q_DECLARE_LOGGING_CATEGORY(lcProjectLifecycle)
 
 class ApplicationSettings;
-
+class UndoModel;
 class SLATE_EXPORT Project : public QObject
 {
     Q_OBJECT
@@ -57,11 +60,13 @@ class SLATE_EXPORT Project : public QObject
     Q_PROPERTY(QString displayUrl READ displayUrl NOTIFY urlChanged)
     Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY sizeChanged)
     Q_PROPERTY(QUndoStack *undoStack READ undoStack CONSTANT)
-    Q_PROPERTY(ApplicationSettings *settings READ settings WRITE setSettings NOTIFY settingsChanged)
+    Q_PROPERTY(ApplicationSettings *settings READ settings WRITE setSettings
+                   NOTIFY settingsChanged)
     Q_PROPERTY(Swatch *swatch READ swatch CONSTANT)
     Q_PROPERTY(SerialisableState *uiState READ uiState CONSTANT)
+    Q_PROPERTY(UndoModel *modelUndo READ getModelUndo CONSTANT)
 
-public:
+  public:
     enum Type {
         UnknownType,
         TilesetType,
@@ -72,6 +77,8 @@ public:
     Q_ENUM(Type)
 
     Project();
+
+    UndoModel *getModelUndo() { return undoModel; }
 
     virtual Type type() const;
     QString typeString() const;
@@ -113,6 +120,7 @@ public:
     bool isValidNoteIndex(int index) const;
 
     Swatch *swatch();
+    UndoModel *undoModel = nullptr; //--------------------------
     const Swatch *swatch() const;
 
     virtual int currentLayerIndex() const;
@@ -157,7 +165,10 @@ public:
     // We need Q_ENUM in order to print the enum, and Q_ENUM needs to be public.
     Q_ENUM(LivePreviewModification);
 
-signals:
+  signals:
+
+    void undoModelChanged(); //--------------
+
     void projectCreated();
     void projectLoaded();
     void projectClosed();
@@ -247,6 +258,7 @@ protected:
     LivePreviewModification mCurrentLivePreviewModification;
 
     QUndoStack mUndoStack;
+
     bool mComposingMacro;
     QString mCurrentlyComposingMacroText;
     bool mHadUnsavedChangesBeforeMacroBegan;

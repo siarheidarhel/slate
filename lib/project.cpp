@@ -19,14 +19,17 @@
 
 #include "project.h"
 
+#include "undoModel.h"
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QDialog>
 #include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLoggingCategory>
 #include <QMetaEnum>
+#include <QStringListModel>
 
 #include "applicationsettings.h"
 #include "imageutils.h"
@@ -36,16 +39,16 @@ Q_LOGGING_CATEGORY(lcProjectGuides, "app.project.guides")
 Q_LOGGING_CATEGORY(lcProjectNotes, "app.project.notes")
 Q_LOGGING_CATEGORY(lcProjectLifecycle, "app.project.lifecycle")
 
-Project::Project() :
-    mSettings(nullptr),
-    mFromNew(false),
-    mUsingTempImage(false),
-    mLivePreviewActive(false),
-    mCurrentLivePreviewModification(LivePreviewModification::None),
-    mComposingMacro(false),
-    mHadUnsavedChangesBeforeMacroBegan(false)
-{
-    connect(&mUndoStack, SIGNAL(cleanChanged(bool)), this, SIGNAL(unsavedChangesChanged()));
+Project::Project()
+    : mSettings(nullptr), mFromNew(false), mUsingTempImage(false),
+      mLivePreviewActive(false),
+      mCurrentLivePreviewModification(LivePreviewModification::None),
+      mComposingMacro(false), mHadUnsavedChangesBeforeMacroBegan(false) {
+
+  connect(&mUndoStack, SIGNAL(cleanChanged(bool)), this,
+          SIGNAL(unsavedChangesChanged()));
+  undoModel = new UndoModel(&mUndoStack);
+  connect(this, SIGNAL(undoModelChanged()), undoModel, SLOT(loadModelUndo()));
 }
 
 Project::Type Project::type() const
@@ -762,8 +765,10 @@ void Project::addChange(UndoCommand *undoCommand)
 
     mUndoStack.push(undoCommand);
 
+    emit undoModelChanged();
+
     if (modifiedContents)
-        emit contentsModified();
+      emit contentsModified();
 }
 
 void Project::clearChanges()
@@ -771,9 +776,10 @@ void Project::clearChanges()
     const bool hadUnsavedChanges = hasUnsavedChanges();
 
     mUndoStack.setIndex(mUndoStack.cleanIndex());
+
     mHadUnsavedChangesBeforeMacroBegan = false;
 
     if (hasUnsavedChanges() != hadUnsavedChanges) {
-        emit unsavedChangesChanged();
+      emit unsavedChangesChanged();
     }
 }

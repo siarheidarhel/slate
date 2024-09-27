@@ -8,7 +8,9 @@ QtGuiApplication {
 
     Depends { name: "Qt.core" }
     Depends { name: "Qt.quick" }
-    Depends { name: "Qt.widgets" }
+    Depends {         files: [
+            "qml/ui/SwatchPanel_copy.qml",
+        ]; name: "Qt.widgets" }
     Depends { name: "lib" }
     // Provides support for Apple Interface Builder - aka asset catalogs.
     Depends { name: "ib"; condition: qbs.targetOS.contains("macos") }

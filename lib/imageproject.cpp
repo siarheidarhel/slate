@@ -87,9 +87,9 @@ void ImageProject::createNew(int imageWidth, int imageHeight, bool transparentBa
     }
 
     qCDebug(lcProject) << "creating new project:"
-        << "imageWidth =" << imageWidth
-        << "imageHeight =" << imageHeight
-        << "imageUrl =" << mImageUrl;
+                       << "imageWidth =" << imageWidth
+                       << "imageHeight =" << imageHeight
+                       << "imageUrl =" << mImageUrl;
 
     Q_ASSERT(mUndoStack.count() == 0);
     Q_ASSERT(mImage.isNull());
